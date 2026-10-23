@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relationship Analysis - Alex &amp; Jordan Demonstration</title>
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-card: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #38bdf8;
+            --accent-glow: rgba(56, 189, 248, 0.15);
+            --border: #334155;
+            --success: #34d399;
+            --warning: #fbbf24;
+            --danger: #f87171;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 30px 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        header {
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 25px;
+            margin-bottom: 30px;
+        }
+        h1 { font-size: 2.2rem; font-weight: 700; color: #fff; margin-bottom: 8px; }
+        .meta-bar { color: var(--text-secondary); font-size: 0.95rem; display: flex; flex-wrap: wrap; gap: 20px; }
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .badge.verified { background: rgba(52, 211, 153, 0.2); color: var(--success); }
+        .badge.unverified { background: rgba(248, 113, 113, 0.2); color: var(--danger); }
+        .badge.conf-high { background: rgba(52, 211, 153, 0.2); color: var(--success); }
+        .badge.conf-medium { background: rgba(251, 191, 36, 0.2); color: var(--warning); }
+        .badge.conf-low { background: rgba(248, 113, 113, 0.2); color: var(--danger); }
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 25px;
+        }
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .kpi-card {
+            background: #151e31;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+        .kpi-val { font-size: 1.8rem; font-weight: 700; color: var(--accent); }
+        .kpi-lbl { font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            background: #151e31;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        th { background: #1a253c; color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; }
+        .category-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 25px;
+        }
+        .category-title-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+        .concise-assessment {
+            background: var(--accent-glow);
+            border-left: 4px solid var(--accent);
+            padding: 12px 16px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 16px;
+            font-size: 1.05rem;
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 25px;
+        }
+        @media (max-width: 850px) {
+            .grid-2 { grid-template-columns: 1fr; }
+        }
+        h4 { color: var(--accent); margin: 16px 0 8px 0; font-size: 1rem; }
+        .obs-list { padding-left: 20px; margin-bottom: 15px; }
+        .evidence-card {
+            background: #131c2e;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+        .evidence-header { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .quote { font-style: italic; color: #e2e8f0; font-size: 0.95rem; margin-bottom: 6px; }
+        .context { font-size: 0.85rem; color: #64748b; }
+        .limitation-text { font-style: italic; color: #94a3b8; font-size: 0.9rem; }
+        .timeline-entry {
+            border-left: 2px solid var(--accent);
+            padding-left: 15px;
+            margin-left: 10px;
+            margin-bottom: 16px;
+            position: relative;
+        }
+        .timeline-period { font-weight: 700; color: var(--accent); }
+        footer {
+            margin-top: 40px;
+            border-top: 1px solid var(--border);
+            padding-top: 20px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Relationship Review: Alex &amp; Jordan Demonstration</h1>
+            <div class="meta-bar">
+                <span><strong>Generated:</strong> 2026-10-23 18:32 UTC</span>
+                <span><strong>Model:</strong> Deterministic Mock Engine</span>
+                <span><strong>Coverage:</strong> Analyzed 200 messages across 5 message chunks.</span>
+            </div>
+        </header>
+
+        <section class="card">
+            <h2 style="margin-bottom: 12px; color: var(--accent);">Executive Summary & Overall Assessment</h2>
+            <p style="font-size: 1.1rem; line-height: 1.7;">The analyzed conversation between Alex and Jordan reflects a healthy, collaborative, and emotionally attentive relationship. Over 200 messages, both participants demonstrated consistent responsiveness, mutual reciprocity in initiating conversations, and the ability to resolve minor uncertainties smoothly. Communication volume shows healthy engagement patterns without signs of destructive conflict or unilateral withdrawal.</p>
+        </section>
+
+        <section class="card">
+            <h2 style="margin-bottom: 16px;">Conversational Metrics & Distribution</h2>
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-val">200</div>
+                    <div class="kpi-lbl">Total Messages</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-val">21</div>
+                    <div class="kpi-lbl">Days Covered</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-val">9.5</div>
+                    <div class="kpi-lbl">Msgs / Day</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-val">30</div>
+                    <div class="kpi-lbl">Conversational Sessions</div>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr><th>Metric</th><th>Alex</th><th>Jordan</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>Message Volume</strong></td><td>96 (48.0%)</td><td>104 (52.0%)</td></tr>
+                    <tr><td><strong>Words per Message</strong></td><td>12.2 (med: 12.0)</td><td>11.0 (med: 11.0)</td></tr>
+                    <tr><td><strong>Questions Asked</strong></td><td>29</td><td>27</td></tr>
+                    <tr><td><strong>Sessions Initiated</strong></td><td>11 (36.7%)</td><td>19 (63.3%)</td></tr>
+                    <tr><td><strong>Median Response Time</strong></td><td>3.0 min (p75: 5.0m)</td><td>3.0 min (p75: 4.0m)</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2 style="margin-bottom: 20px;">Category Reviews (9 Relational Dimensions)</h2>
+            
+        <div class="category-card" id="communication">
+            <div class="category-title-bar">
+                <h3>Communication</h3>
+                <span class="badge conf-high">High Confidence</span>
+            </div>
+            <div class="concise-assessment">
+                <strong>Assessment:</strong> Active, stable dynamics with mutual engagement observed across the timeline.
+            </div>
+            <p class="confidence-reason"><em>Basis: Derived from 5 distinct chunk observations and verified message citations.</em></p>
+
+            <div class="grid-2">
+                <div>
+                    <h4>Key Observations</h4>
+                    <ul class="obs-list"><li>Alex uses direct questioning to keep conversation active.</li><li>Alex uses direct questioning to keep conversation active.</li><li>Alex uses direct questioning to keep conversation active.</li><li>Alex uses direct questioning to keep conversation active.</li><li>Jordan uses direct questioning to keep conversation active.</li></ul>
+
+                    <h4>Participant Dynamics</h4>
+                    <p>Both participants demonstrate active investment, sharing conversational load and responding to cues.</p>
+
+                    <h4>Temporal Evolution</h4>
+                    <p>Early exchanges established conversational norms; sustained consistency was maintained across subsequent months.</p>
+
+                    <h4>Contradictory Evidence & Nuances</h4>
+                    <p>Periodic brief or delayed responses occurred during busy intervals, but these did not signify relational breakdown.</p>
+
+                    <h4>Category Limitations</h4>
+                    <p class="limitation-text">Analysis is bounded by available exported text messages and does not capture voice/in-person interactions.</p>
+                </div>
+                <div>
+                    <h4>Cited Message Evidence</h4>
+                    
+            <div class="evidence-card">
+                <div class="evidence-header">
+                    <strong>Msg #1</strong> &bull; Alex &bull; <span class="time">2023-01-15 06:35</span>
+                    <span class="badge verified">Verified in DB</span>
+                </div>
+                <div class="quote">&ldquo;Hey Jordan! Good morning, how did you sleep?&rdquo;</div>
+                <div class="context">Sender: Alex at 2023-01-15 06:35</div>
+            </div>
+            
+            <div class="evidence-card">
+                <div class="evidence-header">
+                    <strong>Msg #43</strong> &bull; Alex &bull; <span class="time">2023-01-19 17:43</span>
+                    <span class="badge verified">Verified in DB</span>
+                </div>
+                <div class="quote">&ldquo;Hey Jordan! Good morning, how did you sleep?&rdquo;</div>
+                <div class="context">Sender: Alex at 2023-01-19 17:43</div>
+            </div>
+            
+            <div class="evidence-card">
+                <div class="evidence-header">
+                    <strong>Msg #85</strong> &bull; Alex &bull; <span class="time">2023-01-24 04:51</span>
+                    <span class="badge verified">Verified in DB</span>
+                </div>
+                <div class="quote">&ldquo;Hey Jordan! Good morning, how did you sleep?&rdquo;</div>
+                <div class="context">Sender: Alex at 2023-01-24 04:51</div>
+            </div>
+            
+            <div class="evidence-card">
+                <div class="evidence-header">
+                    <strong>Msg #127</strong> &bull; Alex &bull; <span class="time">2023-01-28 15:59</span>
+                    <span class="badge verified">Verified in DB</span>
+                </div>
+                <div class="quote">&ldquo;Hey Jordan! Good morning, how did you sleep?&rdquo;</div>
+                <div class="context">Sender: Alex at 2023-01-28 15:59</div>
+            </div>
+            
+            <div class="evidence-card">
+                <div class="evidence-header">
+                    <strong>Msg #161</strong> &bull; Jordan &bull; <span class="time">2023-02-01 23:46</span>
+                    <span class="badge verified">Verified in DB</span>
+                </div>
+                <div class="quote">&ldquo;Hey, are you on your way? We were supposed to meet at 7:00 and it&#x27;s 7:25.&rdquo;</div>
+                <div class="context">Sender: Jordan at 2023-02-01 23:46</div>
+            </div>
+            
+                </div>
+            </div>
+        </div>
+        
+        <div class="category-card" id="effort_reciprocity">
+            <div class="category-title-bar">
+                <h3>Effort &amp; Reciprocity</h3>
+                <span class="badge conf-high">High Confidence</span>
+            </div>
+            <div class="concise-assessment">
+                <strong>Assessment:</strong> Active, stable dynamics with mutual engagement observed across the timeline.
+            </div>
+            <p class="confidence-reason"><em>Basis: Derived from 5 distinct chunk observations and verified message citations.</em></p>
+
+            <div class="grid-2">
+                <div>
+                    <h4>Key Observations</h4>
+                    <ul class="obs-list"><li>Both participants contribute with consistent turn-taking and balanced replies.</li><li>Both participants contribute with consistent turn-taking and balanced replies.</li><li>Both participants contribute with consistent turn-taking and balanced replies.</li><li>Both participants contribute with consistent turn-taking and balanced replies.</li><li>Both participants contribute with consistent turn-taking and balanced replies.</li></ul>
+
+                    <h4>Participant Dynamics</h4>
+                    <p>Both participants demonstrate active investment, sharing conversational load and responding to cues.</p>
+
+                    <h4>Temporal Evolution</h4>
+                    <p>Early exchanges established conversational norms; sustained consistency was maintained across subsequent months.</p>
+
+                    <h4>Contradictory Evidence & Nuances</h4>
+                    <p>Periodic brief or delayed responses occurred during busy intervals, but these did not signify relational breakdown.</p>
+
+                    <h4>Category Limitations</h4>
+                    <p class="limitation-text">Analysis is bounded by available exported text messages and does not capture voice/in-person interactions.</p>
+                </div>
+                <div>
+                    <h4>Cited Message Evidence</h4>
+                    
+            <div class="evidence-card">
+                <div class="evidence-header">
+                    <strong>Msg #21</strong> &bull; Jordan &bull; <span class="time">2023-01-17 12:04</span>
+                    <span class="badge verified">Verified in DB</span>
+                </div>
+                <div class="quote">&ldquo;Goodnight Alex! Sleep well :)&rdquo;</div>
+                <div class="context">Sender: Jordan at 2023-01-17 12:04</div>
+            </div>
+            
+            <div class="evidence-card">
+                <div class="evidence-header">
+                    <strong>Msg #61</strong> &bull; Jordan &bull; <span class="time">2023-01-21 23:07</span>
+                    <span class="badge verified">Verified in DB</span>
+                </div>
+                <div class="quote">&ldquo;👍&rdquo;</div>
+                <div class="context">Sender: Jordan at 2023-01-21 23:07</div>
+            </div>
+            
+            <div class="evidence-card">
+                <div class="evidence-header">
+                    <strong>Msg #101</strong> &bull; Alex &bull; <span class="time">2023-01-26 07:13</span>
+                    <span class="badge verified">Verified in DB</span>
+                </div>
+                <div class="quote">&ldquo;You are completely right, Jordan. I was rushing and didn&#x27;t check the time. I apo...&rdquo;</div>
+                <div class="context">Actual message: &quot;You are completely right, Jordan. I was rushing and didn&#x27;t check the time. I apologize, I&#x27;ll be more considerate.&quot;</div>
+            </div>
+            
+            <div class="evidence-card">
+                <div class="evidence-header">
+                    <strong>Msg #141</strong> &bull; Alex &bull; <span class="time">2023-01-30 18:14</span>
+                    <span class="badge verified">Verified in DB</span>
+                </div>
+                <div class="quote">&ldquo;Oh no, traffic on 4th street is completely stopped. I should have texted sooner,...&rdquo;</div>
+                <div class="context">Actual message: &quot;Oh no, traffic on 4th street is completely stopped. I should have texted sooner, so sorry!&quot;</div>
+            </div>
+            
+            <div class="evidence-card">
+                <div class="evidence-header">
+                    <strong>Msg #181</strong> &bull; Alex &bull; <span class="time">2023-02-03 05:20</span>
+                    <span class="badge verified">Verified in DB</span>
+                </div>
+                <div class="quote">&ldquo;👍&rdquo;</div>
+                <div class="context">Sender: Alex at 2023-02-03 05:20</div>
+            </div>
+            
+                </div>
+            </div>
+        </div>
+        
+        <div class="category-card" id="emotional_support">
+            <div class="category-title-bar">
+                <h3>Emotional Support</h3>
+                <span class="badge conf-high">High Confidence</span>
+            </div>
+            <div class="concise-assessment">
+                <strong>Assessment:</strong> Active, stable dynamics with mutual engagement observed across the timeline.
+            </div>
+            <p class="confidence-reason"><em>Basis: Derived from 5 distinct chunk observations and verified message citations.</em></p>
+
+            <div class="grid-2">
+                <div>
+                    <h4>Key Observations</h4>
+                    <ul class="obs-list"><li>Jordan provides validation and supportive acknowledgement.</li><li>Alex provides validation and supportive acknowledgement.</li><li>Alex provides validation and supportive acknowledgement.</li><li>Alex provides validation and supportive acknowledgement.</li><li>Alex provides validation and supportive acknowledgement.</li></ul>
+
+                    <h4>Participant Dynamics</h4>
+                    <p>Both participants demonstrate active investment, sharing conversational load and responding to cues.</p>
+
+                    <h4>Temporal Evolution</h4>
+                    <p>Early exchanges established conversational norms; sustained consistency was maintained across subsequent months.</p>
+
+                    <h4>Contradictory Evidence & Nuances</h4>
+                    <p>Periodic brief or delayed responses occurred during busy intervals, but these did not signify relational breakdown.</p>
+
+                    <h4>Category Limitations</h4>
+                    <p class="limitation-text">Analysis is bounded by available exported text messages and does not capture voice/in-person interactions.</p>
+                </div>
+                <div>
+                    <h4>Cited Message Evidence</h4>
+                    
+            <div class="evidence-card">
+                <div class="evidence-header">
+                    <strong>Msg #2</strong> &bull; Jordan &bull; <span class="time">2023-01-15 06:39</span>
+                    <span class="badge verified">Verified in DB</span>
+                </div>
+                <div class="quote">&ldquo;Morning Alex! Pretty well, thanks. Did you finish that presentation last night?&rdquo;</div>
+                <div class="context">Sender: Jordan at 2023-01-15 06:39</div>
+            </div>
+            
+            <div class="evidence-card">
+                <div class="evidence-header">
+                    <strong>Msg #41</strong> &bull; Alex &bull; <span class="time">2023-01-19 17:36</span>
+                    <span class="badge verified">Verified in DB</span>
+                </div>
+                <div class="quote">&ldquo;Me too. I really appreciate how honest you are with me. Have a restful night!&rdquo;</div>
+                <div class="context">Sender: Alex at 2023-01-19 17:36</div>
+            </div>
+            
+            <div class="evidence-card">
+                <div class="evidence-header">
+                    <strong>Msg #83</strong> &bull; Alex &bull; <span class="time">2023-01-24 04:44</span>
+                    <span class="badge verified">Verified in DB</span>
+                </div>
+                <div class="quote">&ldquo;Me too. I really appreciate how honest you are with me. Have a restful night!&rdquo;</div>
+                <div class="context">Sender: Alex at 2023-01-24 04:44</div>
+            </div>
+            
+            <div class="evidence-card">
+                <div class="evidence-header">
+                    <strong>Msg #125</strong> &bull; Alex &bull; <span class="time">2023-01-28 15:52</span>
+                    <span class="badge verified">Verified in DB</span>
+                </div>
+                <div class="quote">&ldquo;Me too. I really appreciate how honest you are with me. Have a restful night!&rdquo;</div>
+                <div class="context">Sender: Alex at 2023-01-28 15:52</div>
+            </div>
+            
+            <div class="evidence-card">
+                <div class="evidence-header">
+                    <strong>Msg #162</strong> &bull; Alex &bull; <span class="time">2023-02-01 23:48</span>
+                    <span class="badge verified">Verified in DB</span>
+                </div>
+                <div class="quote">&ldquo;Oh no, traffic on 4th street is completely stopped. I should have texted sooner,...&rdquo;</div>
+                <div class="context">Actual message: &quot;Oh no, traffic on 4th street is completely stopped. I should have texted sooner, so sorry!&quot;</div>
+            </div>
+            
+                </div>
+            </div>
+        </div>
+        
+        <div class="category-card" id="affection_warmth">
+            <div class="category-title-bar">
+                <h3>Affection &amp; Warmth</h3>
+                <span class="badge conf-high">High Confidence</span>
+            </div>
+            <div class="concise-assessment">
+                <strong>Assessment:</strong> Active, stable dynamics with mutual engagement observed across the timeline.
+            </div>
+            <p class="confidence-reason"><em>Basis: Derived from 5 distinct chunk observations and verified message citations.</em></p>
+
+            <div class="grid-2">
+                <div>
+                    <h4>Key Observations</h4>
+                    <ul class="obs-list"><li>Alex expresses warmth and shared humor.</li><li>Jordan expresses warmth and shared humor.</li><li>Jordan expresses warmth and shared humor.</li><li>Jordan expresses warmth and shared humor.</li><li>Jordan expresses warmth and shared humor.</li></ul>
+
+                    <h4>Participant Dynamics</h4>
+                    <p>Both participants demonstrate active investment, sharing conversational load and responding to cues.</p>
+
+                    <h4>Temporal Evolution</h4>
+                    <p>Early exchanges established conversational norms; sustained consistency was maintained across subsequent months.</p>
+
+                    <h4>Contradictory Evidence & Nuances</h4>
+                    <p>Periodic brief or delayed responses occurred during busy intervals, but these did not signify relational breakdown.</p>
+
+                    <h4>Category Limitations</h4>
+                    <p class="limitation-text">Analysis is bounded by available exported text messages and does not capture voice/in-person interactions.</p>
+                </div>
+                <div>
+                    <h4>Cited Message Evidence</h4>
+                    
+            <div class="evidence-card">
+                <div class="evidence-header">
+                    <strong>Msg #5</strong> &bull; Alex &bull; <span class="time">2023-01-15 06:45</span>
+                    <span class="badge verified">Verified in DB</span>
+                </div>
+                <div class="quote">&ldquo;Thanks so much, that really helps calm my nerves :)&rdquo;</div>
+                <div class="context">Sender: Alex at 2023-01-15 06:45</div>
+            </div>
+            
+            <div class="evidence-card">
+                <div class="evidence-header">
+                    <strong>Msg #42</strong> &bull; Jordan &bull; <span class="time">2023-01-19 17:38</span>
+                    <span class="badge verified">Verified in DB</span>
+                </div>
+                <div class="quote">&ldquo;Goodnight Alex! Sleep well :)&rdquo;</div>
+                <div class="context">Sender: Jordan at 2023-01-19 17:38</div>
+            </div>
+            
+            <div class="evidence-card">
+                <div class="evidence-header">
+                    <strong>Msg #84</strong> &bull; Jordan &bull; <span class="time">2023-01-24 04:46</span>
+                    <span class="badge verified">Verified in DB</span>
+                </div>
+                <div class="quote">&ldquo;Goodnight Alex! Sleep well :)&rdquo;</div>
+                <div class="context">Sender: Jordan at 2023-01-24 04:46</div>
+            </div>
+            
+            <div class="evidence-card">
+                <div class="evidence-header">
+                    <strong>Msg #126</strong> &bull; Jordan &bull; <span class="time">2023-01-28 15:54</span>
+                    <span class="badge verified">Verified in DB</span>
+                </div>
+                <div class="quote">&ldquo;Goodnight Alex! Sleep well :)&rdquo;</div>
+                <div class="context">Sender: Jordan at 2023-01-28 15:54</div>
+            </div>
+            
+            <div class="evidence-card">
+                <div class="evidence-header">
+                    <strong>Msg #168</strong> &bull; Jordan &bull; <span class="time">2023-02-02 03:02</span>
+                    <span class="badge verified">Verified in DB</span>
+                </div>
+                <div class="quote">&ldquo;Goodnight Alex! Sleep well :)&rdquo;</div>
+                <div class="context">Sender: Jordan at 2023-02-02 03:02</div>
+            </div>
+            
+                </div>
+            </div>
+        </div>
+        
+        <div class="category-card" id="conflict_repair">
+            <div class="category-title-bar">
+                <h3>Conflict &amp; Repair</h3>
+                <span class="badge conf-medium">Medium Confidence</span>
+            </div>
+            <div class="concise-assessment">
+                <strong>Assessment:</strong> Active, stable dynamics with mutual engagement observed across the timeline.
+            </div>
+            <p class="confidence-reason"><em>Basis: Derived from 0 distinct chunk observations and verified message citations.</em></p>
+
+            <div class="grid-2">
+                <div>
+                    <h4>Key Observations</h4>
+                    <ul class="obs-list"><li>Consistently demonstrates cooperative conversational alignment.</li></ul>
+
+                    <h4>Participant Dynamics</h4>
+                    <p>Both participants demonstrate active investment, sharing conversational load and responding to cues.</p>
+
+                    <h4>Temporal Evolution</h4>
+                    <p>Early exchanges established conversational norms; sustained consistency was maintained across subsequent months.</p>
+
+                    <h4>Contradictory Evidence & Nuances</h4>
+                    <p>Periodic brief or delayed responses occurred during busy intervals, but these did not signify relational breakdown.</p>
+
+                    <h4>Category Limitations</h4>
+                    <p class="limitation-text">Analysis is bounded by available exported text messages and does not capture voice/in-person interactions.</p>
+                </div>
+                <div>
+                    <h4>Cited Message Evidence</h4>
+                    <em>No specific evidence citations attached.</em>
+                </div>
+            </div>
+        </div>
+        
+        <div class="category-card" id="trust_reliability">
+            <div class="category-title-bar">
+                <h3>Trust &amp; Reliability</h3>
+                <span class="badge conf-medium">Medium Confidence</span>
+            </div>
+            <div class="concise-assessment">
+                <strong>Assessment:</strong> Active, stable dynamics with mutual engagement observed across the timeline.
+            </div>
+            <p class="confidence-reason"><em>Basis: Derived from 0 distinct chunk observations and verified message citations.</em></p>
+
+            <div class="grid-2">
+                <div>
+                    <h4>Key Observations</h4>
+                    <ul class="obs-list"><li>Consistently demonstrates cooperative conversational alignment.</li></ul>
+
+                    <h4>Participant Dynamics</h4>
+                    <p>Both participants demonstrate active investment, sharing conversational load and responding to cues.</p>
+
+                    <h4>Temporal Evolution</h4>
+                    <p>Early exchanges established conversational norms; sustained consistency was maintained across subsequent months.</p>
+
+                    <h4>Contradictory Evidence & Nuances</h4>
+                    <p>Periodic brief or delayed responses occurred during busy intervals, but these did not signify relational breakdown.</p>
+
+                    <h4>Category Limitations</h4>
+                    <p class="limitation-text">Analysis is bounded by available exported text messages and does not capture voice/in-person interactions.</p>
+                </div>
+                <div>
+                    <h4>Cited Message Evidence</h4>
+                    <em>No specific evidence citations attached.</em>
+                </div>
+            </div>
+        </div>
+        
+        <div class="category-card" id="boundaries_respect">
+            <div class="category-title-bar">
+                <h3>Boundaries &amp; Respect</h3>
+                <span class="badge conf-medium">Medium Confidence</span>
+            </div>
+            <div class="concise-assessment">
+                <strong>Assessment:</strong> Active, stable dynamics with mutual engagement observed across the timeline.
+            </div>
+            <p class="confidence-reason"><em>Basis: Derived from 0 distinct chunk observations and verified message citations.</em></p>
+
+            <div class="grid-2">
+                <div>
+                    <h4>Key Observations</h4>
+                    <ul class="obs-list"><li>Consistently demonstrates cooperative conversational alignment.</li></ul>
+
+                    <h4>Participant Dynamics</h4>
+                    <p>Both participants demonstrate active investment, sharing conversational load and responding to cues.</p>
+
+                    <h4>Temporal Evolution</h4>
+                    <p>Early exchanges established conversational norms; sustained consistency was maintained across subsequent months.</p>
+
+                    <h4>Contradictory Evidence & Nuances</h4>
+                    <p>Periodic brief or delayed responses occurred during busy intervals, but these did not signify relational breakdown.</p>
+
+                    <h4>Category Limitations</h4>
+                    <p class="limitation-text">Analysis is bounded by available exported text messages and does not capture voice/in-person interactions.</p>
+                </div>
+                <div>
+                    <h4>Cited Message Evidence</h4>
+                    <em>No specific evidence citations attached.</em>
+                </div>
+            </div>
+        </div>
+        
+        <div class="category-card" id="trajectory">
+            <div class="category-title-bar">
+                <h3>Relationship Trajectory</h3>
+                <span class="badge conf-medium">Medium Confidence</span>
+            </div>
+            <div class="concise-assessment">
+                <strong>Assessment:</strong> Active, stable dynamics with mutual engagement observed across the timeline.
+            </div>
+            <p class="confidence-reason"><em>Basis: Derived from 0 distinct chunk observations and verified message citations.</em></p>
+
+            <div class="grid-2">
+                <div>
+                    <h4>Key Observations</h4>
+                    <ul class="obs-list"><li>Consistently demonstrates cooperative conversational alignment.</li></ul>
+
+                    <h4>Participant Dynamics</h4>
+                    <p>Both participants demonstrate active investment, sharing conversational load and responding to cues.</p>
+
+                    <h4>Temporal Evolution</h4>
+                    <p>Early exchanges established conversational norms; sustained consistency was maintained across subsequent months.</p>
+
+                    <h4>Contradictory Evidence & Nuances</h4>
+                    <p>Periodic brief or delayed responses occurred during busy intervals, but these did not signify relational breakdown.</p>
+
+                    <h4>Category Limitations</h4>
+                    <p class="limitation-text">Analysis is bounded by available exported text messages and does not capture voice/in-person interactions.</p>
+                </div>
+                <div>
+                    <h4>Cited Message Evidence</h4>
+                    <em>No specific evidence citations attached.</em>
+                </div>
+            </div>
+        </div>
+        
+        <div class="category-card" id="overall_assessment">
+            <div class="category-title-bar">
+                <h3>Overall Relationship Assessment</h3>
+                <span class="badge conf-medium">Medium Confidence</span>
+            </div>
+            <div class="concise-assessment">
+                <strong>Assessment:</strong> Active, stable dynamics with mutual engagement observed across the timeline.
+            </div>
+            <p class="confidence-reason"><em>Basis: Derived from 0 distinct chunk observations and verified message citations.</em></p>
+
+            <div class="grid-2">
+                <div>
+                    <h4>Key Observations</h4>
+                    <ul class="obs-list"><li>Consistently demonstrates cooperative conversational alignment.</li></ul>
+
+                    <h4>Participant Dynamics</h4>
+                    <p>Both participants demonstrate active investment, sharing conversational load and responding to cues.</p>
+
+                    <h4>Temporal Evolution</h4>
+                    <p>Early exchanges established conversational norms; sustained consistency was maintained across subsequent months.</p>
+
+                    <h4>Contradictory Evidence & Nuances</h4>
+                    <p>Periodic brief or delayed responses occurred during busy intervals, but these did not signify relational breakdown.</p>
+
+                    <h4>Category Limitations</h4>
+                    <p class="limitation-text">Analysis is bounded by available exported text messages and does not capture voice/in-person interactions.</p>
+                </div>
+                <div>
+                    <h4>Cited Message Evidence</h4>
+                    <em>No specific evidence citations attached.</em>
+                </div>
+            </div>
+        </div>
+        
+        </section>
+
+        <section class="card">
+            <h2 style="margin-bottom: 16px;">Trajectory & Temporal Evolution</h2>
+            
+        <div class="timeline-entry">
+            <div class="timeline-period">2023-01 (High)</div>
+            <div class="timeline-summary">Prompt responses during working hours followed by relaxed evening exchanges.</div>
+        </div>
+        
+        <div class="timeline-entry">
+            <div class="timeline-period">2023-02 (High)</div>
+            <div class="timeline-summary">Prompt responses during working hours followed by relaxed evening exchanges.</div>
+        </div>
+        
+        </section>
+
+        <section class="card" style="border-color: rgba(251, 191, 36, 0.3);">
+            <h3 style="color: var(--warning); margin-bottom: 8px;">Methodological Limitations & Disclaimer</h3>
+            <p>This report is an evidence-based conversational pattern analysis generated by a local AI model. It describes text messaging dynamics only and is not a clinical, psychological, or diagnostic assessment.</p>
+        </section>
+
+        <footer>
+            Local-First AI Relationship Analyst &bull; Zero External AI Calls &bull; Offline Privacy Guaranteed
+        </footer>
+    </div>
+</body>
+</html>

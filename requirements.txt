@@ -1,0 +1,5 @@
+PySide6>=6.6.0
+ijson>=3.3.0
+pydantic>=2.6.0
+requests>=2.31.0
+pytest>=8.0.0

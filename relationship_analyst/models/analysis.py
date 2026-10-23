@@ -1,0 +1,90 @@
+"""Pydantic schemas for LLM chunk observations, temporal aggregations, and final report."""
+from __future__ import annotations
+
+from datetime import datetime
+from typing import Any, Dict, List, Literal, Optional, Union
+from pydantic import BaseModel, Field
+
+
+class EvidenceItem(BaseModel):
+    """An evidence reference citing a specific message and quote."""
+    message_id: int = Field(default=0, description="Database ID of the cited message")
+    timestamp: Optional[str] = Field(default=None, description="ISO timestamp or date string")
+    sender: Optional[str] = Field(default=None, description="Sender name")
+    quote: str = Field(default="", description="Verbatim or near-verbatim quote from message")
+    context: Optional[str] = Field(default=None, description="Short context if helpful")
+    is_verified: bool = Field(default=False, description="True if verified against database")
+
+
+class ChunkObservation(BaseModel):
+    """A structured finding extracted from a single message chunk."""
+    category: str = Field(default="communication", description="Category key (e.g. communication, affection_warmth)")
+    claim: str = Field(default="", description="Specific, evidence-based observation")
+    evidence: List[EvidenceItem] = Field(default_factory=list, description="Supporting message references")
+    sentiment: str = Field(default="neutral", description="Sentiment indicator")
+    participant_focus: Optional[str] = Field(default="both", description="Participant name or 'both'")
+    ambiguity_note: Optional[str] = Field(default=None, description="Alternative explanations or ambiguity")
+    evidence_type: str = Field(default="behavioral_pattern", description="Evidence classification")
+
+
+class ChunkAnalysisResult(BaseModel):
+    """Analysis result returned for a single chunk of messages."""
+    chunk_index: int = Field(default=0)
+    start_msg_id: int = Field(default=0)
+    end_msg_id: int = Field(default=0)
+    start_time: str = Field(default="")
+    end_time: str = Field(default="")
+    message_count: int = Field(default=0)
+    observations: List[ChunkObservation] = Field(default_factory=list)
+
+
+class TemporalPeriodSummary(BaseModel):
+    """Aggregated patterns across a chronological period (e.g., month/quarter)."""
+    period_label: str = Field(default="", description="e.g. '2023-Q1' or '2023-04'")
+    start_date: str = Field(default="")
+    end_date: str = Field(default="")
+    message_count: int = Field(default=0)
+    category_summaries: Dict[str, str] = Field(default_factory=dict)
+    recurring_patterns: List[str] = Field(default_factory=list)
+    notable_shifts: List[str] = Field(default_factory=list)
+    key_evidence: List[EvidenceItem] = Field(default_factory=list)
+
+
+class CategoryReport(BaseModel):
+    """Detailed review for a single relationship category."""
+    category_id: str = Field(default="")
+    category_title: str = Field(default="")
+    concise_assessment: str = Field(default="", description="Core takeaway for this category")
+    supporting_observations: List[str] = Field(default_factory=list)
+    dated_evidence: List[EvidenceItem] = Field(default_factory=list)
+    temporal_patterns: str = Field(default="", description="How this category evolved over time")
+    both_participants_dynamics: str = Field(default="", description="Contributions and behavior from both participants")
+    contradictory_evidence: str = Field(default="", description="Counter-examples or conflicting patterns")
+    confidence_level: str = Field(default="Medium")
+    confidence_justification: str = Field(default="", description="Why this confidence level was assigned")
+    limitations: str = Field(default="", description="Specific limitations or caveats for this category")
+
+
+class OverallSynthesisResult(BaseModel):
+    """Overall relationship dynamic and trajectory timeline."""
+    overall_assessment: str = Field(default="", description="High-level synthesis of dynamics, strengths, and friction")
+    coverage_summary: str = Field(default="", description="Summary of analyzed data coverage and scope")
+    trajectory_timeline: List[Dict[str, Any]] = Field(default_factory=list)
+
+
+class FinalReport(BaseModel):
+    """Complete relationship review report across all categories."""
+    project_id: str = Field(default="")
+    project_name: str = Field(default="")
+    generated_at: datetime = Field(default_factory=datetime.utcnow)
+    model_used: str = Field(default="")
+    coverage_summary: str = Field(default="")
+    is_complete_run: bool = True
+    deterministic_stats: Dict[str, Any] = Field(default_factory=dict)
+    overall_assessment: str = Field(default="", description="High-level synthesis of dynamics, strengths, and friction")
+    categories: Dict[str, CategoryReport] = Field(default_factory=dict)
+    trajectory_timeline: List[Dict[str, Any]] = Field(default_factory=list)
+    limitations_disclaimer: str = Field(
+        default="This report is an evidence-based conversational pattern analysis generated by a local AI model. "
+                "It describes text messaging dynamics only and is not a clinical, psychological, or diagnostic assessment."
+    )
