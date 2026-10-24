@@ -47,19 +47,97 @@ def clean_json_text(json_str: str) -> str:
     return cleaned
 
 
+def repair_truncated_json(raw_text: str) -> Any:
+    """
+    Attempt to recover valid JSON from a truncated or cut-off LLM response.
+    Closes open strings, removes incomplete trailing key-values, and balances braces/brackets.
+    """
+    text = raw_text.strip()
+
+    # 1. First heuristic: inside an array of objects (like "observations": [ {...}, ... ]),
+    # walk backwards from the end to find the last fully completed object '}'
+    idx = len(text)
+    while idx > 0:
+        last_brace = text.rfind("}", 0, idx)
+        if last_brace == -1:
+            break
+        candidate = text[: last_brace + 1].strip()
+        candidate = re.sub(r",\s*$", "", candidate)
+        for suffix in ("]\n}", "}\n}", "]", "}"):
+            try:
+                return json.loads(candidate + "\n" + suffix)
+            except Exception:
+                pass
+        idx = last_brace
+
+    # 2. Stack-based closing heuristic: track unbalanced { and [
+    in_string = False
+    escape = False
+    stack: List[str] = []
+    out: List[str] = []
+
+    for ch in text:
+        if escape:
+            out.append(ch)
+            escape = False
+            continue
+        if ch == "\\" and in_string:
+            out.append(ch)
+            escape = True
+            continue
+        if ch == '"':
+            in_string = not in_string
+            out.append(ch)
+            continue
+        if in_string:
+            out.append(ch)
+            continue
+        if ch in ("{", "["):
+            stack.append("}" if ch == "{" else "]")
+        elif ch in ("}", "]"):
+            if stack and stack[-1] == ch:
+                stack.pop()
+        out.append(ch)
+
+    repaired = "".join(out)
+    if in_string:
+        repaired += '"'
+
+    # Strip dangling keys (e.g. '"claim":' at EOF) or trailing commas
+    repaired = re.sub(r',\s*$', '', repaired.strip())
+    repaired = re.sub(r',\s*("[^"]*"\s*:\s*)?$', '', repaired.strip())
+
+    while stack:
+        repaired += stack.pop()
+
+    return json.loads(repaired)
+
+
 def parse_and_validate(raw_text: str, model_cls: Type[T]) -> T:
-    """Parse raw LLM output text into a Pydantic model with fallback heuristics."""
+    """Parse raw LLM output text into a Pydantic model with fallback heuristics and auto-repair."""
     json_candidate = extract_json_str(raw_text)
     sanitized = clean_json_text(json_candidate)
 
+    data = None
     try:
         data = json.loads(sanitized)
-    except json.JSONDecodeError as err:
-        # Try again with raw_text in case extraction was too aggressive
+    except json.JSONDecodeError:
         try:
             data = json.loads(raw_text.strip())
         except Exception:
-            raise ValueError(f"Failed to parse valid JSON from LLM output: {err}\nOutput snippet: {raw_text[:200]}")
+            # Fall back to auto-repair of truncated or cut-off JSON
+            try:
+                data = repair_truncated_json(sanitized)
+                logger.info("Successfully repaired truncated JSON for %s", model_cls.__name__)
+            except Exception:
+                try:
+                    data = repair_truncated_json(raw_text)
+                    logger.info("Successfully repaired truncated raw text for %s", model_cls.__name__)
+                except Exception as repair_err:
+                    raise ValueError(
+                        f"Failed to parse valid JSON from LLM output: {repair_err}\n"
+                        f"Output snippet: {raw_text[:200]}"
+                    )
 
     # Heuristic normalization for common LLM structure variations
     if model_cls.__name__ == "ChunkAnalysisResult":

@@ -93,7 +93,7 @@ def process_chunks(
                     prompt=prompt,
                     system_prompt=CHUNK_SYSTEM_PROMPT,
                     temperature=0.2,
-                    num_predict=550,
+                    num_predict=950,
                 )
                 chunk_result = parse_and_validate(raw_json, ChunkAnalysisResult)
                 chunk_result.chunk_index = idx
