@@ -10,7 +10,7 @@ from relationship_analyst.ai.parser import parse_and_validate
 from relationship_analyst.ai.prompts import CHUNK_SYSTEM_PROMPT, build_chunk_prompt
 from relationship_analyst.database.repository import Repository
 from relationship_analyst.models.analysis import ChunkAnalysisResult
-from relationship_analyst.models.message import CanonicalMessage
+from relationship_analyst.models.message import CanonicalMessage, format_compact_chunk_messages
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +85,7 @@ def process_chunks(
                 categories=categories,
             )
         else:
-            messages_text = "\n".join(m.format_for_prompt() for m in chunk)
+            messages_text = format_compact_chunk_messages(chunk)
             prompt = build_chunk_prompt(messages_text, categories, participants)
             try:
                 raw_json = ollama_client.generate_json(
@@ -93,6 +93,7 @@ def process_chunks(
                     prompt=prompt,
                     system_prompt=CHUNK_SYSTEM_PROMPT,
                     temperature=0.2,
+                    num_predict=550,
                 )
                 chunk_result = parse_and_validate(raw_json, ChunkAnalysisResult)
                 chunk_result.chunk_index = idx

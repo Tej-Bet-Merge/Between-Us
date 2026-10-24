@@ -84,12 +84,20 @@ class OllamaClient:
         temperature: float = 0.2,
         max_retries: int = OLLAMA_MAX_RETRIES,
         think: bool = False,
+        num_predict: Optional[int] = None,
     ) -> str:
         """
         Request JSON generation from local Ollama model with bounded retries.
         Returns the raw string output from the model.
         """
         url = f"{self.host}/api/generate"
+        options: Dict[str, Any] = {
+            "temperature": temperature,
+            "num_thread": 4,  # Utilize all 4 logical processor threads
+        }
+        if num_predict is not None:
+            options["num_predict"] = num_predict
+
         payload = {
             "model": model,
             "prompt": prompt,
@@ -97,9 +105,7 @@ class OllamaClient:
             "stream": False,
             "format": "json",
             "think": think,
-            "options": {
-                "temperature": temperature,
-            },
+            "options": options,
         }
 
         body_bytes = json.dumps(payload).encode("utf-8")

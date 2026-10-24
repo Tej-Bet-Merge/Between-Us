@@ -10,13 +10,14 @@ CHUNK_SYSTEM_PROMPT = """You are an objective, evidence-based relationship commu
 Your task is to analyze conversational text messages between participants and identify concrete dynamics.
 
 CRITICAL RULES:
-1. Ground every single claim in observable message evidence.
-2. Cite the exact msg_id and quote verbatim text from the messages provided. Never fabricate messages or message IDs.
-3. Distinguish clearly between direct statements and inferred tone/subtext.
-4. If an exchange is ambiguous, explicitly state the ambiguity or alternative interpretations.
-5. Do NOT make clinical or psychiatric diagnoses (e.g. do not diagnose narcissism, depression, attachment disorders).
-6. Do NOT claim telepathic knowledge of unspoken internal intentions; stick to observable conversational actions and words.
-7. Return ONLY valid JSON matching the specified schema.
+1. Ground every claim in observable message evidence.
+2. Cite the exact message ID (#ID) and quote verbatim text from the messages provided. Never fabricate messages or message IDs.
+3. Focus on the 2 to 3 most distinct, meaningful relationship dynamics in this chunk. Be concise.
+4. Distinguish clearly between direct statements and inferred tone/subtext.
+5. If an exchange is ambiguous, explicitly state the ambiguity or alternative interpretations.
+6. Do NOT make clinical or psychiatric diagnoses.
+7. Do NOT claim telepathic knowledge of unspoken internal intentions; stick to observable words and actions.
+8. Return ONLY valid JSON matching the specified schema.
 """
 
 
@@ -39,13 +40,13 @@ FOCUS CATEGORIES:
 MESSAGES:
 {messages_text}
 
-Extract 2 to 6 key relationship observations observed in this chunk.
+Extract the top 2 to 3 most distinct relationship observations observed in this chunk. Be concise.
 Return a JSON object conforming strictly to this structure:
 {{
   "observations": [
     {{
       "category": "one of the requested category IDs",
-      "claim": "Specific observation about how the participants communicate or interact",
+      "claim": "Concise 1-sentence observation about how the participants communicate or interact",
       "sentiment": "positive | neutral | negative | mixed | nuanced",
       "participant_focus": "Name of participant or 'both'",
       "evidence_type": "direct_quote | behavioral_pattern | inferred_subtext",
@@ -54,7 +55,7 @@ Return a JSON object conforming strictly to this structure:
         {{
           "message_id": 123,
           "sender": "SenderName",
-          "quote": "verbatim text snippet from message"
+          "quote": "concise verbatim text snippet from message"
         }}
       ]
     }}

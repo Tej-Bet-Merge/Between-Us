@@ -33,3 +33,5 @@ desktop.ini
 # Temporary test scripts
 test_qwen*.py
 test_stream.py
+analyze_chunk_times.py
+read_checkpoint.py
