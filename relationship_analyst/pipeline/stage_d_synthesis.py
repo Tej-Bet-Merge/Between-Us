@@ -15,7 +15,7 @@ from relationship_analyst.ai.prompts import (
     build_single_category_prompt,
     build_synthesis_prompt,
 )
-from relationship_analyst.config import CATEGORIES
+from relationship_analyst.config import CATEGORIES, get_effective_categories
 from relationship_analyst.database.repository import Repository
 from relationship_analyst.models.analysis import (
     CategoryReport,

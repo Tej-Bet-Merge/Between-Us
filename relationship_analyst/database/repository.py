@@ -495,6 +495,55 @@ class Repository:
 
     # ------------------ Helpers ------------------
 
+    def get_custom_categories(self) -> List[Dict[str, Any]]:
+        """Return all active custom categories."""
+        with self._get_connection() as conn:
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS custom_categories (
+                    id TEXT PRIMARY KEY,
+                    title TEXT NOT NULL,
+                    description TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    is_active INTEGER DEFAULT 1
+                )
+                """
+            )
+            rows = conn.execute(
+                "SELECT id, title, description, created_at FROM custom_categories WHERE is_active = 1 ORDER BY created_at ASC"
+            ).fetchall()
+            return [dict(r) for r in rows]
+
+    def save_custom_category(self, cat_id: str, title: str, description: str) -> None:
+        """Insert or replace a custom category."""
+        now = datetime.utcnow().isoformat()
+        with self._get_connection() as conn:
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS custom_categories (
+                    id TEXT PRIMARY KEY,
+                    title TEXT NOT NULL,
+                    description TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    is_active INTEGER DEFAULT 1
+                )
+                """
+            )
+            conn.execute(
+                "INSERT OR REPLACE INTO custom_categories (id, title, description, created_at, is_active) VALUES (?, ?, ?, ?, 1)",
+                (cat_id, title, description, now),
+            )
+            conn.commit()
+
+    def delete_custom_category(self, cat_id: str) -> None:
+        """Soft-delete a custom category by marking it inactive."""
+        with self._get_connection() as conn:
+            conn.execute(
+                "UPDATE custom_categories SET is_active = 0 WHERE id = ?",
+                (cat_id,),
+            )
+            conn.commit()
+
     def _row_to_message(self, row: sqlite3.Row) -> CanonicalMessage:
         return CanonicalMessage(
             id=row["id"],

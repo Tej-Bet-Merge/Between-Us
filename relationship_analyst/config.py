@@ -90,3 +90,24 @@ CATEGORIES: Dict[str, Dict[str, str]] = {
 }
 
 CATEGORY_KEYS: List[str] = list(CATEGORIES.keys())
+
+
+def get_effective_categories(repository=None) -> Dict[str, Dict[str, str]]:
+    """
+    Return the merged category registry: built-in CATEGORIES + any custom categories
+    stored in the database. When repository is None, returns only built-in categories.
+    This is the single source of truth used by prompts, parsers, and reports.
+    """
+    effective = dict(CATEGORIES)
+    if repository is not None:
+        try:
+            for cat in repository.get_custom_categories():
+                cid = cat["id"]
+                effective[cid] = {
+                    "id": cid,
+                    "title": cat["title"],
+                    "description": cat["description"],
+                }
+        except Exception:
+            pass  # DB may not have the table yet on first run
+    return effective

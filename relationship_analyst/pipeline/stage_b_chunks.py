@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 import logging
-from typing import Callable, List, Optional
+from typing import Callable, Dict, List, Optional
 
 from relationship_analyst.ai.mock_engine import MockInferenceEngine
 from relationship_analyst.ai.ollama_client import OllamaClient
 from relationship_analyst.ai.parser import parse_and_validate
 from relationship_analyst.ai.prompts import CHUNK_SYSTEM_PROMPT, build_chunk_prompt
+from relationship_analyst.config import get_effective_categories
 from relationship_analyst.database.repository import Repository
 from relationship_analyst.models.analysis import ChunkAnalysisResult
 from relationship_analyst.models.message import CanonicalMessage, format_compact_chunk_messages
@@ -86,7 +87,8 @@ def process_chunks(
             )
         else:
             messages_text = format_compact_chunk_messages(chunk)
-            prompt = build_chunk_prompt(messages_text, categories, participants)
+            category_registry = get_effective_categories(repository)
+            prompt = build_chunk_prompt(messages_text, categories, participants, category_registry=category_registry)
             try:
                 raw_json = ollama_client.generate_json(
                     model=model_name,

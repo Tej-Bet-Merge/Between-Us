@@ -98,6 +98,14 @@ CREATE TABLE IF NOT EXISTS reports (
     report_json TEXT NOT NULL,
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS custom_categories (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    is_active INTEGER DEFAULT 1
+);
 """
 
 

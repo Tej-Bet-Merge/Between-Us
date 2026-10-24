@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import json
-from typing import List
-from relationship_analyst.config import CATEGORIES
+from typing import Dict, List, Optional
+from relationship_analyst.config import CATEGORIES, get_effective_categories
 
 
 CHUNK_SYSTEM_PROMPT = """You are an objective, evidence-based relationship communication analyst.
@@ -25,9 +25,11 @@ def build_chunk_prompt(
     messages_text: str,
     categories: List[str],
     participants: List[str],
+    category_registry: Optional[Dict] = None,
 ) -> str:
+    registry = category_registry or CATEGORIES
     category_descriptions = "\n".join(
-        f"- {cat_id}: {CATEGORIES.get(cat_id, {}).get('description', '')}"
+        f"- {cat_id}: {registry.get(cat_id, {}).get('description', cat_id)}"
         for cat_id in categories
     )
     participants_str = ", ".join(participants) if participants else "participants"
@@ -206,10 +208,12 @@ def build_synthesis_prompt(
     temporal_summaries_text: str,
     observations_text: str,
     categories: List[str],
+    category_registry: Optional[Dict] = None,
 ) -> str:
+    registry = category_registry or CATEGORIES
     categories_schema = {}
     for cat in categories:
-        cat_info = CATEGORIES.get(cat, {})
+        cat_info = registry.get(cat, {})
         categories_schema[cat] = {
             "category_id": cat,
             "category_title": cat_info.get("title", cat),
